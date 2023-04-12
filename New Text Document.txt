@@ -1,0 +1,6 @@
+// 1 => authnticate to the app 
+// 2 => store the token in somewhere 
+// 3 => consume jobtittle service [Create, read (all , id ) , update , delete ]
+// 4 => consume email-template service [Create, read (all , id ) , update , delete ]
+// cdiadmin
+// P@ssw0rd
