@@ -9,6 +9,7 @@ import { NotFoundError } from './common/not-found-error';
 import { EmailTemplate } from './models/email-template.model';
 import { HttpParams } from '@angular/common/http';
 import { ResponseData } from './services/data.service';
+import { BadInputError } from './common/bad-input-error';
 
 @Component({
   selector: 'app-root',
@@ -34,12 +35,8 @@ export class AppComponent implements OnInit {
       (resData) => {
         console.log(resData);
         this.isLoading = false;
-
-        //this.getJobTitleList(); // tested on postman
-        this.createJobTitle(); // unauthorized
-        // this.getJobTitleById();
-        // this.updateJobTitle();
-        // this.deleteJobTitle();
+        this.getJobTitleList();
+        this.getEmailTemplateList();
       },
       (error) => {
         this.error = 'An Error occurred!';
@@ -61,20 +58,21 @@ export class AppComponent implements OnInit {
             next: (jobTitles) => {
               this.jobTitleList = jobTitles;
               console.log('job-title get All: ', jobTitles);
+              this.createJobTitle();
             },
             error: (error: AppError) => {
               if (error instanceof NotFoundError)
-                console.log('posts get failed', error.originalError);
+                console.log('job-titles get failed', error.originalError);
               else throw error;
             },
           }),
-      3000
+      1000
     );
   }
   createJobTitle() {
     const newJobTitle = new JobTitle({
-      arName: 'جديد 333',
-      enName: 'newJobTitle333',
+      arName: Math.random().toString(36).substring(2, 6),
+      enName: Math.random().toString(36).substring(2, 6),
       isSystem: false,
       jobType: 0,
       status: 0,
@@ -95,8 +93,8 @@ export class AppComponent implements OnInit {
               this.getJobTitleById();
             },
             error: (error: AppError) => {
-              if (error instanceof NotFoundError)
-                console.log('posts get failed', error.originalError);
+              if (error instanceof BadInputError)
+                console.log('job-title create failed', error.originalError);
               else throw error;
             },
           }),
@@ -117,7 +115,7 @@ export class AppComponent implements OnInit {
             },
             error: (error: AppError) => {
               if (error instanceof NotFoundError)
-                console.log('posts get failed', error.originalError);
+                console.log('job-title get failed', error.originalError);
               else throw error;
             },
           }),
@@ -147,7 +145,7 @@ export class AppComponent implements OnInit {
             },
             error: (error: AppError) => {
               if (error instanceof NotFoundError)
-                console.log('posts update failed', error.originalError);
+                console.log('job-title update failed', error.originalError);
               else throw error;
             },
           }),
@@ -167,7 +165,7 @@ export class AppComponent implements OnInit {
             },
             error: (error: AppError) => {
               if (error instanceof NotFoundError)
-                console.log('job title deleted failed', error.originalError);
+                console.log('job-title deleted failed', error.originalError);
               else throw error;
             },
           }),
@@ -176,19 +174,24 @@ export class AppComponent implements OnInit {
   }
 
   getEmailTemplateList() {
+    let queryParams = new HttpParams().append('offset', 0);
+    queryParams = queryParams.append('limit', 2);
+    // console.log(queryParams);
+
     setTimeout(
       () =>
         this.emailTemplateService
-          .getAll<EmailTemplate>()
+          .getAll<EmailTemplate>(queryParams)
           .pipe(tap((data) => console.log('All: ' + JSON.stringify(data))))
           .subscribe({
             next: (emailTemplates) => {
               this.emailTemplateList = emailTemplates;
-              console.log('job-title get All: ', emailTemplates);
+              console.log('email-template get All: ', emailTemplates);
+              this.createEmailTemplate();
             },
             error: (error: AppError) => {
               if (error instanceof NotFoundError)
-                console.log('posts get failed', error.originalError);
+                console.log('email-template get failed', error.originalError);
               else throw error;
             },
           }),
@@ -197,106 +200,124 @@ export class AppComponent implements OnInit {
   }
   createEmailTemplate() {
     const newEmailTemplate = new EmailTemplate({
-      updatedBy: 44,
-      updatedOn: new Date(),
-      clientData: '',
-      arName: 'فرع عمل جديد',
-      enName: 'new job title',
-      isGlobal: true,
+      arName: Math.random().toString(36).substring(2, 6),
+      enName: Math.random().toString(36).substring(2, 6),
       status: 0,
+      isGlobal: true,
+      enSubjectTemplate: 'string',
+      enBodyTemplate: 'string',
+      arSubjectTemplate: 'string',
+      arBodyTemplate: 'string',
     });
     setTimeout(
       () =>
         this.emailTemplateService
-          .create<EmailTemplate>(newEmailTemplate)
-          .pipe(
-            tap((data) =>
-              console.log('create new job-title: ' + JSON.stringify(data))
-            )
-          )
+          .create<EmailTemplate>(newEmailTemplate, '/admin/full')
+          // .pipe(
+          //   tap((data) =>
+          //     console.log('create new email-template: ' + JSON.stringify(data))
+          //   )
+          // )
           .subscribe({
             next: (emailTemplate) => {
-              this.createdEmailTemplate = new EmailTemplate(emailTemplate);
-              console.log(' new job-title created: ', emailTemplate);
+              this.createdEmailTemplate = new EmailTemplate(
+                Object.values(emailTemplate)[1]
+              );
+              console.log(
+                ' new email-template created: ',
+                this.createdEmailTemplate
+              );
+              this.getEmailTemplateById();
             },
             error: (error: AppError) => {
-              if (error instanceof NotFoundError)
-                console.log('posts get failed', error.originalError);
+              if (error instanceof BadInputError)
+                console.log(
+                  'email-template create failed',
+                  error.originalError
+                );
               else throw error;
             },
           }),
-      5000
+      1000
     );
   }
   getEmailTemplateById() {
     setTimeout(
       () =>
         this.emailTemplateService
-          .getById<EmailTemplate>(0)
-          .pipe(tap((data) => console.log('All: ' + JSON.stringify(data))))
+          .getById<EmailTemplate>(this.createdEmailTemplate.id as number)
+          // .getById<EmailTemplate>(56)
+          // .pipe(tap((data) => console.log('All: ' + JSON.stringify(data))))
           .subscribe({
-            next: (emailTemplates) => {
-              this.createdEmailTemplate = emailTemplates;
-              console.log('job-title get by Id: ', emailTemplates);
+            next: (emailTemplate) => {
+              console.log('email-template get by Id: ', emailTemplate);
+              this.updateEmailTemplate();
             },
             error: (error: AppError) => {
               if (error instanceof NotFoundError)
-                console.log('posts get failed', error.originalError);
+                console.log('email-template get failed', error.originalError);
               else throw error;
             },
           }),
-      3000
+      1000
     );
   }
   updateEmailTemplate() {
     const newEmailTemplate = new EmailTemplate({
-      updatedBy: 44,
-      updatedOn: new Date(),
-      clientData: '',
-      arName: 'فرع عمل معدل',
-      enName: 'updated job title',
+      id: this.createdEmailTemplate.id,
+      arName: this.createdEmailTemplate.arName + 'معدل',
+      enName: this.createdEmailTemplate.enName + 'updated',
       status: 0,
+      isGlobal: true,
+      enSubjectTemplate: 'string',
+      enBodyTemplate: 'string',
+      arSubjectTemplate: 'string',
+      arBodyTemplate: 'string',
     });
-    setTimeout(
+
+    return setTimeout(
       () =>
         this.emailTemplateService
-          .update<EmailTemplate>(newEmailTemplate)
-          .pipe(
-            tap((data) =>
-              console.log('update job-title: ' + JSON.stringify(data))
-            )
-          )
+          .update<EmailTemplate>(newEmailTemplate, '/admin/full')
+
           .subscribe({
             next: (emailTemplate) => {
-              this.createdEmailTemplate = new EmailTemplate(emailTemplate);
-              console.log('  job-title updated: ', emailTemplate);
+              console.log('  email-template updated: ', emailTemplate);
+              this.deleteEmailTemplate();
             },
             error: (error: AppError) => {
               if (error instanceof NotFoundError)
-                console.log('posts update failed', error.originalError);
+                console.log(
+                  'email-template update failed',
+                  error.originalError
+                );
               else throw error;
             },
           }),
-      5000
+      1000
     );
   }
   deleteEmailTemplate() {
     setTimeout(
       () =>
         this.emailTemplateService
-          .remove('0')
+          // .remove('56', '/admin')
+          .remove(String(this.createdEmailTemplate.id), '/admin')
 
           .subscribe({
             next: (response) => {
-              console.log('  job-title deleted: ', response);
+              console.log('  email-template deleted: ', response);
             },
             error: (error: AppError) => {
               if (error instanceof NotFoundError)
-                console.log('posts delete failed', error.originalError);
+                console.log(
+                  'email-template deleted failed',
+                  error.originalError
+                );
               else throw error;
             },
           }),
-      5000
+      1000
     );
   }
 }
