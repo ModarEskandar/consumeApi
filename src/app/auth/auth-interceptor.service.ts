@@ -25,11 +25,15 @@ export class AuthInterceptor implements HttpInterceptor {
     request: HttpRequest<any>,
     next: HttpHandler
   ): Observable<HttpEvent<any>> {
-    console.log('user token', this.userToken);
+    // console.log('user token', this.userToken);
     if (this.userToken) {
       request = request.clone({
-        setHeaders: { Authorization: `${this.userToken}` },
+        setHeaders: {
+          'content-type': 'application/json',
+          Authorization: `${this.userToken}`,
+        },
       });
+      // console.log(JSON.stringify(request));
     }
     return (
       next
@@ -39,7 +43,7 @@ export class AuthInterceptor implements HttpInterceptor {
           tap((event) => {
             console.log(event);
             if (event.type === HttpEventType.Response) {
-              console.log('response here, the body:', event.body);
+              // console.log('response here, the body:', event.body);
             }
           })
         )

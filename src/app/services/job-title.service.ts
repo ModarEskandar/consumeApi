@@ -7,6 +7,9 @@ import { DataService } from './data.service';
 })
 export class JobTitleService extends DataService {
   constructor(httpClient: HttpClient) {
-    super('eblaepm.no-ip.org:9092/cdi/api/v1/entity/job-title', httpClient);
+    super(
+      'http://eblaepm.no-ip.org:9092/cdi/api/v1/entity/job-title',
+      httpClient
+    );
   }
 }

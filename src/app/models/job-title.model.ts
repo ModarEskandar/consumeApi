@@ -41,9 +41,9 @@ export class JobTitle extends ResourceModel<JobTitle> {
   // public arName?:string;
   // public enName?:string;
   // public status?:boolean;
-  public statusDateModified!: Date;
-  public jobType!: number;
-  public isSystem!: boolean;
+  public statusDateModified?: Date;
+  public jobType?: number;
+  public isSystem?: boolean;
   public statusInfo?: Info;
   public typeInfo?: Info;
 

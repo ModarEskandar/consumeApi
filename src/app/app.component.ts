@@ -7,6 +7,8 @@ import { JobTitle } from './models/job-title.model';
 import { AppError } from './common/app-error';
 import { NotFoundError } from './common/not-found-error';
 import { EmailTemplate } from './models/email-template.model';
+import { HttpParams } from '@angular/common/http';
+import { ResponseData } from './services/data.service';
 
 @Component({
   selector: 'app-root',
@@ -32,8 +34,12 @@ export class AppComponent implements OnInit {
       (resData) => {
         console.log(resData);
         this.isLoading = false;
-        this.getJobTitleList();
-        this.createJobTitle();
+
+        //this.getJobTitleList(); // tested on postman
+        this.createJobTitle(); // unauthorized
+        // this.getJobTitleById();
+        // this.updateJobTitle();
+        // this.deleteJobTitle();
       },
       (error) => {
         this.error = 'An Error occurred!';
@@ -42,10 +48,14 @@ export class AppComponent implements OnInit {
     );
   }
   getJobTitleList() {
+    let queryParams = new HttpParams().append('offset', 0);
+    queryParams = queryParams.append('limit', 2);
+    console.log(queryParams);
+
     setTimeout(
       () =>
         this.jobTitleService
-          .getAll<JobTitle>()
+          .getAll<JobTitle>(queryParams)
           .pipe(tap((data) => console.log('All: ' + JSON.stringify(data))))
           .subscribe({
             next: (jobTitles) => {
@@ -63,31 +73,26 @@ export class AppComponent implements OnInit {
   }
   createJobTitle() {
     const newJobTitle = new JobTitle({
-      updatedBy: 44,
-      updatedOn: new Date(),
-      clientData: '',
-      arName: 'فرع عمل جديد',
-      enName: 'new job title',
-      isSystem: true,
+      arName: 'جديد 333',
+      enName: 'newJobTitle333',
+      isSystem: false,
       jobType: 0,
-      status: true,
-      statusDateModified: new Date(),
-      statusInfo: { arName: 'wow', enName: 'wow', id: 0, fnId: '', parent: 0 },
-      typeInfo: { arName: 'wow', enName: 'wow', id: 0, fnId: '', parent: 0 },
+      status: 0,
     });
     setTimeout(
       () =>
         this.jobTitleService
-          .create<JobTitle>(newJobTitle)
-          .pipe(
-            tap((data) =>
-              console.log('create new job-title: ' + JSON.stringify(data))
-            )
-          )
+          .create<JobTitle>(newJobTitle, '/admin/full')
+          // .pipe(
+          //   tap((data) =>
+          //     console.log('create new job-title: ' + JSON.stringify(data))
+          //   )
+          // )
           .subscribe({
             next: (jobTitle) => {
-              this.createdJobTitle = new JobTitle(jobTitle);
-              console.log(' new job-title created: ', jobTitle);
+              this.createdJobTitle = new JobTitle(Object.values(jobTitle)[1]);
+              console.log(' new job-title created: ', this.createdJobTitle);
+              this.getJobTitleById();
             },
             error: (error: AppError) => {
               if (error instanceof NotFoundError)
@@ -95,19 +100,20 @@ export class AppComponent implements OnInit {
               else throw error;
             },
           }),
-      5000
+      1000
     );
   }
   getJobTitleById() {
     setTimeout(
       () =>
         this.jobTitleService
-          .get<JobTitle>(0)
-          .pipe(tap((data) => console.log('All: ' + JSON.stringify(data))))
+          .getById<JobTitle>(this.createdJobTitle.id as number)
+          // .getById<JobTitle>(56)
+          // .pipe(tap((data) => console.log('All: ' + JSON.stringify(data))))
           .subscribe({
-            next: (jobTitles) => {
-              this.createdJobTitle = jobTitles;
-              console.log('job-title get by Id: ', jobTitles);
+            next: (jobTitle) => {
+              console.log('job-title get by Id: ', jobTitle);
+              this.updateJobTitle();
             },
             error: (error: AppError) => {
               if (error instanceof NotFoundError)
@@ -115,36 +121,29 @@ export class AppComponent implements OnInit {
               else throw error;
             },
           }),
-      3000
+      1000
     );
   }
   updateJobTitle() {
     const newJobTitle = new JobTitle({
-      updatedBy: 44,
-      updatedOn: new Date(),
-      clientData: '',
-      arName: 'فرع عمل معدل',
-      enName: 'updated job title',
-      isSystem: true,
+      id: this.createdJobTitle.id,
+      arName: this.createdJobTitle.arName + 'معدل',
+      enName: this.createdJobTitle.enName + 'updated',
+      status: 0,
       jobType: 0,
-      status: true,
-      statusDateModified: new Date(),
-      statusInfo: { arName: 'wow', enName: 'wow', id: 0, fnId: '', parent: 0 },
-      typeInfo: { arName: 'wow', enName: 'wow', id: 0, fnId: '', parent: 0 },
+      isSystem: false,
+      // id: 56,
     });
-    setTimeout(
+
+    return setTimeout(
       () =>
         this.jobTitleService
-          .update<JobTitle>(newJobTitle)
-          .pipe(
-            tap((data) =>
-              console.log('update job-title: ' + JSON.stringify(data))
-            )
-          )
+          .update<JobTitle>(newJobTitle, '/admin/full')
+
           .subscribe({
             next: (jobTitle) => {
-              this.createdJobTitle = new JobTitle(jobTitle);
               console.log('  job-title updated: ', jobTitle);
+              this.deleteJobTitle();
             },
             error: (error: AppError) => {
               if (error instanceof NotFoundError)
@@ -152,14 +151,15 @@ export class AppComponent implements OnInit {
               else throw error;
             },
           }),
-      5000
+      1000
     );
   }
   deleteJobTitle() {
     setTimeout(
       () =>
         this.jobTitleService
-          .remove('0')
+          // .remove('56', '/admin')
+          .remove(String(this.createdJobTitle.id), '/admin')
 
           .subscribe({
             next: (response) => {
@@ -167,11 +167,11 @@ export class AppComponent implements OnInit {
             },
             error: (error: AppError) => {
               if (error instanceof NotFoundError)
-                console.log('posts delete failed', error.originalError);
+                console.log('job title deleted failed', error.originalError);
               else throw error;
             },
           }),
-      5000
+      1000
     );
   }
 
@@ -203,7 +203,7 @@ export class AppComponent implements OnInit {
       arName: 'فرع عمل جديد',
       enName: 'new job title',
       isGlobal: true,
-      status: true,
+      status: 0,
     });
     setTimeout(
       () =>
@@ -232,7 +232,7 @@ export class AppComponent implements OnInit {
     setTimeout(
       () =>
         this.emailTemplateService
-          .get<EmailTemplate>(0)
+          .getById<EmailTemplate>(0)
           .pipe(tap((data) => console.log('All: ' + JSON.stringify(data))))
           .subscribe({
             next: (emailTemplates) => {
@@ -255,7 +255,7 @@ export class AppComponent implements OnInit {
       clientData: '',
       arName: 'فرع عمل معدل',
       enName: 'updated job title',
-      status: true,
+      status: 0,
     });
     setTimeout(
       () =>

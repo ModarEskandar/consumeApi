@@ -27,7 +27,7 @@ export class AuthService {
         catchError(this.handleError),
         tap((resData) => {
           const user = new User('cdiadmin', resData.rs.token);
-          console.log(user);
+          // console.log(user);
           this.user.next(user);
           localStorage.setItem(
             'userInfo',

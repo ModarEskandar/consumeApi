@@ -5,7 +5,7 @@ export abstract class ResourceModel<T> {
   public clientData?: string;
   public arName?: string;
   public enName?: string;
-  public status?: boolean;
+  public status?: number;
 
   constructor(model?: Partial<T>) {
     if (model) {
